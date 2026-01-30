@@ -34,16 +34,18 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontError) throw fontError;
+    if (fontError) {
+      console.warn('Font loading error:', fontError);
+    }
   }, [fontError]);
 
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
