@@ -1,31 +1,33 @@
-import { StyleSheet } from 'react-native';
+import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import styled from 'styled-components/native';
+import { HomeFeed } from '../../components/feed';
+import { colors, spacing, typography } from '../../constants/theme';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+const Container = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${colors.background};
+`;
 
-export default function TabOneScreen() {
+const Header = styled.View`
+  padding: ${spacing.md}px;
+  padding-top: ${spacing.sm}px;
+`;
+
+const Logo = styled.Text`
+  color: ${colors.accent};
+  font-family: ${typography.fontFamily.headerBold};
+  font-size: ${typography.fontSize.xxl}px;
+  letter-spacing: 2px;
+`;
+
+export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-    </View>
+    <Container edges={['top']}>
+      <Header>
+        <Logo>BINGER</Logo>
+      </Header>
+      <HomeFeed />
+    </Container>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
