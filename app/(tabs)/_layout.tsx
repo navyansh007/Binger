@@ -10,8 +10,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: { display: 'none' },
+        sceneStyle: { backgroundColor: colors.background },
       }}
-      sceneContainerStyle={{ backgroundColor: colors.background }}
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="search" />

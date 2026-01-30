@@ -104,9 +104,13 @@ const ProgressBar = styled.View`
   background-color: ${colors.primaryLight};
 `;
 
-const ProgressFill = styled.View<{ progress: number }>`
+interface ProgressFillProps {
+  progress: number;
+}
+
+const ProgressFill = styled.View<ProgressFillProps>`
   height: 100%;
-  width: ${(props) => props.progress}%;
+  width: ${(props: ProgressFillProps) => props.progress}%;
   background-color: ${colors.accent};
 `;
 

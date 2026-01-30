@@ -23,11 +23,16 @@ interface HapticButtonProps {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const ButtonText = styled.Text<{ variant: string; size: string }>`
-  color: ${(props) =>
+interface ButtonTextProps {
+  variant: string;
+  size: string;
+}
+
+const ButtonText = styled.Text<ButtonTextProps>`
+  color: ${(props: ButtonTextProps) =>
     props.variant === 'primary' ? colors.primary : colors.text};
   font-family: ${typography.fontFamily.bodyMedium};
-  font-size: ${(props) =>
+  font-size: ${(props: ButtonTextProps) =>
     props.size === 'sm'
       ? typography.fontSize.sm
       : props.size === 'lg'

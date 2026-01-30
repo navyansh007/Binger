@@ -53,9 +53,13 @@ const BottomGradient = styled(LinearGradient)`
   height: 200px;
 `;
 
-const TopControls = styled.View<{ insetTop: number }>`
+interface TopControlsProps {
+  insetTop: number;
+}
+
+const TopControls = styled.View<TopControlsProps>`
   position: absolute;
-  top: ${(props) => props.insetTop}px;
+  top: ${(props: TopControlsProps) => props.insetTop}px;
   left: 0;
   right: 0;
   flex-direction: row;
@@ -111,9 +115,13 @@ const PlayButton = styled(Pressable)`
   border-radius: 35px;
 `;
 
-const BottomControls = styled.View<{ insetBottom: number }>`
+interface BottomControlsProps {
+  insetBottom: number;
+}
+
+const BottomControls = styled.View<BottomControlsProps>`
   position: absolute;
-  bottom: ${(props) => props.insetBottom + spacing.md}px;
+  bottom: ${(props: BottomControlsProps) => props.insetBottom + spacing.md}px;
   left: 0;
   right: 0;
   padding-horizontal: ${spacing.md}px;

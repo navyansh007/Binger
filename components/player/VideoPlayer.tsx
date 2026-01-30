@@ -50,12 +50,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
 
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    StatusBar.setHidden(true);
+    StatusBar.setHidden(true, 'fade');
     return () => {
-      StatusBar.setHidden(false);
+      StatusBar.setHidden(false, 'fade');
     };
   }, []);
 

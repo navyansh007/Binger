@@ -18,10 +18,16 @@ interface SkeletonLoaderProps {
   style?: ViewStyle;
 }
 
-const Container = styled.View<{ width: number | string; height: number; radius: number }>`
-  width: ${(props) => (typeof props.width === 'number' ? `${props.width}px` : props.width)};
-  height: ${(props) => props.height}px;
-  border-radius: ${(props) => props.radius}px;
+interface ContainerProps {
+  width: number | string;
+  height: number;
+  radius: number;
+}
+
+const Container = styled.View<ContainerProps>`
+  width: ${(props: ContainerProps) => (typeof props.width === 'number' ? `${props.width}px` : props.width)};
+  height: ${(props: ContainerProps) => props.height}px;
+  border-radius: ${(props: ContainerProps) => props.radius}px;
   overflow: hidden;
   background-color: ${colors.primary};
 `;

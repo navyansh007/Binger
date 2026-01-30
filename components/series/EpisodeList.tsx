@@ -43,12 +43,16 @@ const SeeAllText = styled.Text`
   font-size: ${typography.fontSize.sm}px;
 `;
 
-const EpisodeCard = styled(Pressable)<{ isActive: boolean }>`
+interface EpisodeCardProps {
+  isActive: boolean;
+}
+
+const EpisodeCard = styled(Pressable)<EpisodeCardProps>`
   width: ${EPISODE_CARD_WIDTH}px;
   margin-left: ${spacing.md}px;
   border-radius: ${borderRadius.md}px;
   overflow: hidden;
-  border-width: ${(props) => (props.isActive ? 2 : 0)}px;
+  border-width: ${(props: EpisodeCardProps) => (props.isActive ? 2 : 0)}px;
   border-color: ${colors.accent};
 `;
 
@@ -98,9 +102,13 @@ const ProgressBar = styled.View`
   background-color: ${colors.primaryLight};
 `;
 
-const ProgressFill = styled.View<{ progress: number }>`
+interface ProgressFillProps {
+  progress: number;
+}
+
+const ProgressFill = styled.View<ProgressFillProps>`
   height: 100%;
-  width: ${(props) => props.progress}%;
+  width: ${(props: ProgressFillProps) => props.progress}%;
   background-color: ${colors.accent};
 `;
 

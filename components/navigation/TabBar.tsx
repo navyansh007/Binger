@@ -63,8 +63,12 @@ const TabIconContainer = styled(MotiView)`
   border-radius: 22px;
 `;
 
-const TabLabel = styled.Text<{ focused: boolean }>`
-  color: ${(props) => (props.focused ? colors.accent : colors.textMuted)};
+interface TabLabelProps {
+  focused: boolean;
+}
+
+const TabLabel = styled.Text<TabLabelProps>`
+  color: ${(props: TabLabelProps) => (props.focused ? colors.accent : colors.textMuted)};
   font-family: ${typography.fontFamily.body};
   font-size: ${typography.fontSize.xs}px;
   margin-top: ${spacing.xs / 2}px;
