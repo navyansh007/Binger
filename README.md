@@ -11,9 +11,9 @@ It’s not just an app. It is a cinema in your pocket.
 ## 📸 Experience the App
 
 <p align="center">
-  <img src="path/to/home_screen.png" width="30%" alt="Home Screen" />
-  <img src="path/to/player_screen.png" width="30%" alt="Cinematic Player" />
-  <img src="path/to/creator_dashboard.png" width="30%" alt="Creator Studio" />
+  <img src="assets/screenshots/welcome.png" width="30%" alt="Welcome" />
+  <img src="assets/screenshots/home.png" width="30%" alt="Home" />
+  <img src="assets/screenshots/creator.png" width="30%" alt="Creator Studio" />
 </p>
 
 > *Replace the paths above with your actual screenshots.*
