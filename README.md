@@ -16,11 +16,23 @@ It’s not just an app. It is a cinema in your pocket.
   <img src="assets/screenshots/creator.png" width="30%" alt="Creator Studio" />
 </p>
 
-> *Replace the paths above with your actual screenshots.*
+---
+
+---
+
+## ⏯️ Watch the Demo
+
+<p align="center">
+  <a href="/assets/screenshots/demo.mp4">
+  </a>
+</p>
+
+> *Tap the banner above to watch the cinematic walkthrough of Binger.*
 
 ---
 
 ## 🌟 For Viewers: Experience the Story
+
 Dive into a world of high-quality, short-form series designed for your phone.
 
 *   **🎬 Cinematic Vertical Feed**: Experience stories like never before with our immersive, full-screen player. Swipe through episodes as easily as you scroll through social feeds.
