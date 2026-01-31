@@ -1,31 +1,32 @@
-import { useEffect } from 'react';
-import { StatusBar } from 'react-native';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { ThemeProvider } from 'styled-components/native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  useFonts,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-} from '@expo-google-fonts/poppins';
 import {
   Inter_400Regular,
   Inter_500Medium,
 } from '@expo-google-fonts/inter';
+import {
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  useFonts,
+} from '@expo-google-fonts/poppins';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { ThemeProvider } from 'styled-components/native';
 
-import { theme, colors } from '../constants/theme';
+import { colors, theme } from '../constants/theme';
+import { AuthProvider } from '../context/AuthContext';
 
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: 'index',
 };
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutNav() {
   const [fontsLoaded, fontError] = useFonts({
     Poppins_600SemiBold,
     Poppins_700Bold,
@@ -41,7 +42,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
+      SplashScreen.hideAsync().catch(() => { });
     }
   }, [fontsLoaded, fontError]);
 
@@ -60,6 +61,8 @@ export default function RootLayout() {
             animation: 'slide_from_right',
           }}
         >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="series/[id]"
@@ -77,5 +80,21 @@ export default function RootLayout() {
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>
+  );
+}
+
+import { SubscriptionProvider } from '../context/SubscriptionContext';
+
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '../components/ui/ToastConfig';
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <SubscriptionProvider>
+        <RootLayoutNav />
+        <Toast config={toastConfig} />
+      </SubscriptionProvider>
+    </AuthProvider>
   );
 }

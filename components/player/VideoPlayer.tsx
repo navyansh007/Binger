@@ -1,10 +1,10 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import { AVPlaybackStatus, ResizeMode, Video } from 'expo-av';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, StatusBar } from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import styled from 'styled-components/native';
-import { PlayerControls } from './PlayerControls';
-import { GestureOverlay } from './GestureOverlay';
 import { colors } from '../../constants/theme';
+import { GestureOverlay } from './GestureOverlay';
+import { PlayerControls } from './PlayerControls';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -16,6 +16,7 @@ interface VideoPlayerProps {
   onNext?: () => void;
   onPrevious?: () => void;
   initialPosition?: number;
+  shouldPlay?: boolean;
 }
 
 const Container = styled.View`
@@ -42,15 +43,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onNext,
   onPrevious,
   initialPosition = 0,
+  shouldPlay = true,
 }) => {
   const videoRef = useRef<Video>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(shouldPlay);
   const [showControls, setShowControls] = useState(true);
   const [currentTime, setCurrentTime] = useState(initialPosition);
   const [duration, setDuration] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
 
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync internal playing state with prop
+  useEffect(() => {
+    setIsPlaying(shouldPlay);
+    if (!shouldPlay) {
+      setShowControls(true); // Show controls if paused externally
+    }
+  }, [shouldPlay]);
+
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     StatusBar.setHidden(true, 'fade');
@@ -59,28 +71,34 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, []);
 
+  // Auto-hide controls logic
   useEffect(() => {
     if (showControls) {
-      controlsTimeoutRef.current = setTimeout(() => {
-        if (isPlaying) {
-          setShowControls(false);
-        }
-      }, 4000);
-    }
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
 
-    return () => {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
+      if (isPlaying) {
+        controlsTimeoutRef.current = setTimeout(() => {
+          setShowControls(false);
+        }, 3500);
       }
+    }
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     };
   }, [showControls, isPlaying]);
 
   const handlePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
     if (status.isLoaded) {
+      setHasLoaded(true);
       setCurrentTime(status.positionMillis / 1000);
       setDuration(status.durationMillis ? status.durationMillis / 1000 : 0);
-      setIsPlaying(status.isPlaying);
       setIsBuffering(status.isBuffering);
+
+      // If video finishes, show controls?
+      if (status.didJustFinish) {
+        setShowControls(true);
+        setIsPlaying(false);
+      }
     }
   }, []);
 
@@ -88,8 +106,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoRef.current) {
       if (isPlaying) {
         await videoRef.current.pauseAsync();
+        setIsPlaying(false);
+        setShowControls(true); // Keep controls visible when paused
       } else {
         await videoRef.current.playAsync();
+        setIsPlaying(true);
       }
     }
   }, [isPlaying]);
@@ -100,29 +121,27 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, []);
 
-  const skipForward = useCallback(async () => {
-    const newTime = Math.min(currentTime + 10, duration);
-    await seekTo(newTime);
-  }, [currentTime, duration, seekTo]);
-
-  const skipBackward = useCallback(async () => {
-    const newTime = Math.max(currentTime - 10, 0);
-    await seekTo(newTime);
-  }, [currentTime, seekTo]);
-
   const handleTap = useCallback(() => {
-    setShowControls((prev) => !prev);
+    // Logic:
+    // 1. If controls hidden -> Show controls (Keep playing)
+    // 2. If controls visible & playing -> Pause (Show controls)
+    // 3. If controls visible & paused -> Play (Hide controls eventually)
+
+    if (!showControls) {
+      setShowControls(true);
+    } else {
+      togglePlayPause();
+    }
+  }, [showControls, togglePlayPause]);
+
+  const handleSeekStart = useCallback(() => {
+    // Clear timeout to prevent auto-hide while dragging
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    setShowControls(true);
   }, []);
 
-  const handleDoubleTapLeft = useCallback(() => {
-    skipBackward();
-  }, [skipBackward]);
-
-  const handleDoubleTapRight = useCallback(() => {
-    skipForward();
-  }, [skipForward]);
-
   const handleSeek = useCallback((progress: number) => {
+    setShowControls(true); // Dragging shows controls
     const newTime = progress * duration;
     seekTo(newTime);
   }, [duration, seekTo]);
@@ -133,20 +152,22 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <StyledVideo
           ref={videoRef}
           source={{ uri: videoUrl }}
-          resizeMode={ResizeMode.CONTAIN}
-          shouldPlay
+          resizeMode={ResizeMode.COVER}
+          shouldPlay={shouldPlay && isPlaying}
+          isLooping={true}
           onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
         />
       </VideoContainer>
 
       <GestureOverlay
         onTap={handleTap}
-        onDoubleTapLeft={handleDoubleTapLeft}
-        onDoubleTapRight={handleDoubleTapRight}
+        onSwipeUp={onNext || (() => { })}
+        onSwipeDown={onPrevious || (() => { })}
+        onSwipeRight={onClose} // Swipe Right to Go Back
       />
 
       <PlayerControls
-        visible={showControls}
+        visible={showControls} // Fade in/out
         isPlaying={isPlaying}
         isBuffering={isBuffering}
         currentTime={currentTime}
@@ -155,9 +176,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         episodeTitle={episodeTitle}
         onPlayPause={togglePlayPause}
         onSeek={handleSeek}
-        onClose={onClose}
-        onSkipForward={skipForward}
-        onSkipBackward={skipBackward}
+        onSlidingStart={handleSeekStart}
         onNext={onNext}
         onPrevious={onPrevious}
       />

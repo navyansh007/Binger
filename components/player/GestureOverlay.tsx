@@ -1,17 +1,21 @@
-import React, { useRef } from 'react';
-import { Dimensions, Pressable, View } from 'react-native';
-import { MotiView } from 'moti';
-import styled from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Dimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import styled from 'styled-components/native';
+import { colors } from '../../constants/theme';
 import { useHaptics } from '../../hooks/useHaptics';
-import { colors, typography } from '../../constants/theme';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface GestureOverlayProps {
   onTap: () => void;
-  onDoubleTapLeft: () => void;
-  onDoubleTapRight: () => void;
+  onSwipeUp: () => void;
+  onSwipeDown: () => void;
+  onSwipeRight?: () => void;
+  onDoubleTapLeft?: () => void;
+  onDoubleTapRight?: () => void;
 }
 
 const Container = styled.View`
@@ -20,118 +24,80 @@ const Container = styled.View`
   left: 0;
   right: 0;
   bottom: 0;
-  flex-direction: row;
 `;
 
-const TouchZone = styled(Pressable)`
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-`;
-
-const SkipIndicator = styled(MotiView)`
-  width: 100px;
-  height: 100px;
-  border-radius: 50px;
-  background-color: ${colors.glass};
-  justify-content: center;
-  align-items: center;
+const PlayPauseIcon = styled(Animated.View)`
   position: absolute;
-`;
-
-const SkipText = styled.Text`
-  color: ${colors.text};
-  font-family: ${typography.fontFamily.bodyMedium};
-  font-size: ${typography.fontSize.sm}px;
-  margin-top: 4px;
+  top: 50%;
+  left: 50%;
+  margin-top: -36px;
+  margin-left: -36px;
+  z-index: 10;
+  opacity: 0;
 `;
 
 export const GestureOverlay: React.FC<GestureOverlayProps> = ({
   onTap,
-  onDoubleTapLeft,
-  onDoubleTapRight,
+  onSwipeUp,
+  onSwipeDown,
+  onSwipeRight,
 }) => {
-  const { mediumImpact } = useHaptics();
-  const lastTapTimeRef = useRef<{ left: number; right: number }>({
-    left: 0,
-    right: 0,
-  });
-  const [showLeftIndicator, setShowLeftIndicator] = React.useState(false);
-  const [showRightIndicator, setShowRightIndicator] = React.useState(false);
+  const { lightImpact } = useHaptics();
+  const iconOpacity = useSharedValue(0);
+  const iconScale = useSharedValue(0.5);
 
-  const handleLeftPress = () => {
-    const now = Date.now();
-    const timeSinceLastTap = now - lastTapTimeRef.current.left;
-
-    if (timeSinceLastTap < 300) {
-      // Double tap
-      mediumImpact();
-      onDoubleTapLeft();
-      setShowLeftIndicator(true);
-      setTimeout(() => setShowLeftIndicator(false), 500);
-      lastTapTimeRef.current.left = 0;
-    } else {
-      // Single tap (wait to see if another tap comes)
-      lastTapTimeRef.current.left = now;
-      setTimeout(() => {
-        if (lastTapTimeRef.current.left === now) {
-          onTap();
-        }
-      }, 300);
-    }
+  const showIcon = () => {
+    iconOpacity.value = 1;
+    iconScale.value = 0.5;
+    iconScale.value = withSpring(1.2);
+    iconOpacity.value = withSequence(
+      withTiming(1, { duration: 200 }),
+      withTiming(0, { duration: 800 })
+    );
   };
 
-  const handleRightPress = () => {
-    const now = Date.now();
-    const timeSinceLastTap = now - lastTapTimeRef.current.right;
+  const singleTap = Gesture.Tap()
+    .maxDuration(250)
+    .onStart(() => {
+      runOnJS(lightImpact)();
+      runOnJS(onTap)();
+    });
 
-    if (timeSinceLastTap < 300) {
-      // Double tap
-      mediumImpact();
-      onDoubleTapRight();
-      setShowRightIndicator(true);
-      setTimeout(() => setShowRightIndicator(false), 500);
-      lastTapTimeRef.current.right = 0;
-    } else {
-      // Single tap (wait to see if another tap comes)
-      lastTapTimeRef.current.right = now;
-      setTimeout(() => {
-        if (lastTapTimeRef.current.right === now) {
-          onTap();
+  const pan = Gesture.Pan()
+    // .activeOffsetY([-20, 20]) // Removed to allow horizontal detection
+    .onEnd((e) => {
+      // Determine direction based on largest translation
+      if (Math.abs(e.translationY) > Math.abs(e.translationX)) {
+        // Vertical Swipe
+        if (e.translationY < -50) {
+          runOnJS(onSwipeUp)();
+        } else if (e.translationY > 50) {
+          runOnJS(onSwipeDown)();
         }
-      }, 300);
-    }
-  };
+      } else {
+        // Horizontal Swipe
+        if (e.translationX > 50 && onSwipeRight) {
+          runOnJS(onSwipeRight)();
+        }
+      }
+    });
+
+  const composed = Gesture.Simultaneous(singleTap, pan);
+
+  const animatedIconStyle = useAnimatedStyle(() => ({
+    opacity: iconOpacity.value,
+    transform: [{ scale: iconScale.value }],
+  }));
 
   return (
     <Container>
-      <TouchZone onPress={handleLeftPress}>
-        {showLeftIndicator && (
-          <SkipIndicator
-            from={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ type: 'spring', damping: 15 }}
-          >
-            <Ionicons name="play-back" size={32} color={colors.text} />
-            <SkipText>10s</SkipText>
-          </SkipIndicator>
-        )}
-      </TouchZone>
-
-      <TouchZone onPress={handleRightPress}>
-        {showRightIndicator && (
-          <SkipIndicator
-            from={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ type: 'spring', damping: 15 }}
-          >
-            <Ionicons name="play-forward" size={32} color={colors.text} />
-            <SkipText>10s</SkipText>
-          </SkipIndicator>
-        )}
-      </TouchZone>
+      <GestureDetector gesture={composed}>
+        <Animated.View style={{ flex: 1, backgroundColor: 'transparent' }}>
+          <PlayPauseIcon style={animatedIconStyle}>
+            <Ionicons name="play" size={72} color={colors.glass} />
+          </PlayPauseIcon>
+        </Animated.View>
+      </GestureDetector>
     </Container>
   );
 };
