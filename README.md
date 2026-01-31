@@ -22,10 +22,7 @@ It’s not just an app. It is a cinema in your pocket.
 
 ## ⏯️ Watch the Demo
 
-<p align="center">
-  <a href="/assets/screenshots/demo.mp4">
-  </a>
-</p>
+[![Watch the video](https://img.youtube.com/vi/wh5IXHJk7OM/0.jpg)](https://youtube.com/v/wh5IXHJk7OM)
 
 > *Tap the banner above to watch the cinematic walkthrough of Binger.*
 
